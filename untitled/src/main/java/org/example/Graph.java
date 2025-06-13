@@ -37,6 +37,28 @@ public class Graph {
         return false;
     }
 
+    public boolean removeVertex(String vertex){
+        if (adjList.get(vertex) == null) return false;
+        for(String otherVertex : adjList.get(vertex)){
+            adjList.get(otherVertex).remove(vertex);
+        }
+        adjList.remove(vertex);
+        return true;
+    }
+
+    public int getVertexDegree(String vertex){
+        return adjList.get(vertex).size();
+    }
+
+    public HashMap<String, Integer> getAllVertexDegree(){
+        HashMap<String, Integer> degreeMap = new HashMap<>();
+        for(String vertex : adjList.keySet()){
+            degreeMap.put(vertex, getVertexDegree(vertex));
+        }
+
+        return degreeMap;
+    }
+
     @Override
     public String toString() {
         return "Graph{" +

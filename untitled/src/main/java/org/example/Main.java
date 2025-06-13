@@ -10,13 +10,36 @@ public class Main {
         myGraph.addVertex("A");
         myGraph.addVertex("B");
         myGraph.addVertex("C");
+        myGraph.addVertex("D");
 
         myGraph.addEdge("A", "B");
         myGraph.addEdge("A", "C");
-        myGraph.addEdge("B", "C");
-
-        myGraph.removeEdge("A", "B");
+        myGraph.addEdge("A", "D");
+        myGraph.addEdge("B", "D");
+        myGraph.addEdge("C", "D");
 
         System.out.println(myGraph.toString());
+
+        System.out.println("##################################");
+
+        System.out.println(myGraph.getVertexDegree("A"));
+
+        System.out.println("##################################");
+        System.out.println(myGraph.getAllVertexDegree());
+        System.out.println("##################################");
+
+
+        myGraph.removeVertex("D");
+
+        System.out.println(myGraph.toString());
+
+        System.out.println("##################################");
+
+        System.out.println(myGraph.getVertexDegree("A"));
+
+        System.out.println("##################################");
+        System.out.println(myGraph.getAllVertexDegree());
+        System.out.println("##################################");
+
     }
 }
