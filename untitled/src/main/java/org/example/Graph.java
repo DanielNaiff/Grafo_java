@@ -47,6 +47,9 @@ public class Graph {
     }
 
     public int getVertexDegree(String vertex){
+        if (!adjList.containsKey(vertex)) {
+            throw new IllegalArgumentException("O Vertice \"" + vertex + "\" nao existe no grafo.");
+        }
         return adjList.get(vertex).size();
     }
 
