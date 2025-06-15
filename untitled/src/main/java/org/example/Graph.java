@@ -2,6 +2,7 @@ package org.example;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Graph {
     private HashMap<String, ArrayList<String>> adjList = new HashMap<>();
@@ -46,6 +47,13 @@ public class Graph {
         return true;
     }
 
+    public List<String> adjacency(String vertex) {
+        if (!adjList.containsKey(vertex)) {
+            throw new IllegalArgumentException("O vértice \"" + vertex + "\" não existe no grafo.");
+        }
+        return new ArrayList<>(adjList.get(vertex));
+    }
+
     public int getVertexDegree(String vertex){
         if (!adjList.containsKey(vertex)) {
             throw new IllegalArgumentException("O Vertice \"" + vertex + "\" nao existe no grafo.");
@@ -69,5 +77,47 @@ public class Graph {
                 "adjList=" + adjList +
 
                 '}';
+    }
+
+    public static void main(String[] args) {
+
+        Graph myGraph = new Graph();
+
+        myGraph.addVertex("A");
+        myGraph.addVertex("B");
+        myGraph.addVertex("C");
+        myGraph.addVertex("D");
+
+        myGraph.addEdge("A", "B");
+        myGraph.addEdge("A", "C");
+        myGraph.addEdge("A", "D");
+        myGraph.addEdge("B", "D");
+        myGraph.addEdge("C", "D");
+
+        System.out.println(myGraph.toString());
+
+        System.out.println("##################################");
+
+        System.out.println(myGraph.getVertexDegree("A"));
+
+        System.out.println("##################################");
+        System.out.println(myGraph.getAllVertexDegree());
+        System.out.println("##################################");
+        System.out.println(myGraph.adjacency("A"));
+        System.out.println("##################################");
+
+
+        myGraph.removeVertex("D");
+
+        System.out.println(myGraph.toString());
+
+        System.out.println("##################################");
+
+        System.out.println(myGraph.getVertexDegree("A"));
+
+        System.out.println("##################################");
+        System.out.println(myGraph.getAllVertexDegree());
+        System.out.println("##################################");
+
     }
 }
