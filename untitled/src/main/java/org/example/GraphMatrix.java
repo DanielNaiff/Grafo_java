@@ -59,7 +59,7 @@ public class GraphMatrix {
                 adjMatrix[j][i] = adjMatrix[j][i + 1];
             }
         }
-        
+
         for (int i = index; i < vertices.size(); i++) {
             vertexIndexMap.put(vertices.get(i), i);
         }
