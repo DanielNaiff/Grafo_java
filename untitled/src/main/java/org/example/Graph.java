@@ -1,11 +1,6 @@
 package org.example;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
-import java.util.Map;
+import java.util.*;
 
 
 public class Graph {
@@ -74,6 +69,32 @@ public class Graph {
         return degreeMap;
     }
 
+    private boolean isBridge(String u, String v, HashMap<String, ArrayList<String>> graphTemp) {
+        int count1 = dfsCount(u, graphTemp, new HashSet<>());
+
+        graphTemp.get(u).remove(v);
+        graphTemp.get(v).remove(u);
+
+        int count2 = dfsCount(u, graphTemp, new HashSet<>());
+
+        graphTemp.get(u).add(v);
+        graphTemp.get(v).add(u);
+
+        return count2 < count1;
+    }
+
+    private int dfsCount(String vertex, HashMap<String, ArrayList<String>> graphTemp, HashSet<String> visited) {
+        visited.add(vertex);
+        int count = 1;
+        for (String adj : graphTemp.get(vertex)) {
+            if (!visited.contains(adj)) {
+                count += dfsCount(adj, graphTemp, visited);
+            }
+        }
+        return count;
+    }
+
+
     public String isEulerian() {
         HashMap<String, Integer> degrees = getAllVertexDegree();
         int oddCount = 0;
@@ -93,7 +114,6 @@ public class Graph {
             throw new IllegalStateException("O grafo não é Euleriano.");
         }
 
-        // Encontra vértice inicial
         String start = adjList.keySet().iterator().next();
         if (type.equals("Eulerian Path")) {
             for (String vertex : adjList.keySet()) {
@@ -122,8 +142,20 @@ public class Graph {
             String current = stack.peek();
 
             if (!tempGraph.get(current).isEmpty()) {
-                String next = tempGraph.get(current).get(0);
+                String next = null;
 
+                for (String adj : tempGraph.get(current)) {
+                    if (!isBridge(current, adj, tempGraph)) {
+                        next = adj;
+                        break;
+                    }
+                }
+
+                if (next == null) {
+                    next = tempGraph.get(current).get(0);
+                }
+
+                // Remove a aresta
                 tempGraph.get(current).remove(next);
                 tempGraph.get(next).remove(current);
 
@@ -154,18 +186,22 @@ public class Graph {
         myGraph.addVertex("B");
         myGraph.addVertex("C");
         myGraph.addVertex("D");
+        myGraph.addVertex("E");
 
         myGraph.addEdge("A", "B");
         myGraph.addEdge("A", "C");
         myGraph.addEdge("B", "C");
-        myGraph.addEdge("C", "D");
+        myGraph.addEdge("B", "D"); // Ponte
+        myGraph.addEdge("D", "E");
 
+        System.out.println("Tipo de grafo: " + myGraph.isEulerian());
 
         try {
             System.out.println("Caminho/Circuito de Euler: " + myGraph.fleuryAlgorithm());
         } catch (IllegalStateException e) {
             System.out.println(e.getMessage());
         }
+
 
     }
 }
