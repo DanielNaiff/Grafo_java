@@ -1,8 +1,12 @@
 package org.example;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
+import java.util.Map;
+
 
 public class Graph {
     private HashMap<String, ArrayList<String>> adjList = new HashMap<>();
@@ -70,6 +74,69 @@ public class Graph {
         return degreeMap;
     }
 
+    public String isEulerian() {
+        HashMap<String, Integer> degrees = getAllVertexDegree();
+        int oddCount = 0;
+
+        for (int degree : degrees.values()) {
+            if (degree % 2 != 0) oddCount++;
+        }
+
+        if (oddCount == 0) return "Eulerian Circuit";
+        if (oddCount == 2) return "Eulerian Path";
+        return "Not Eulerian";
+    }
+
+    public List<String> fleuryAlgorithm() {
+        String type = isEulerian();
+        if (type.equals("Not Eulerian")) {
+            throw new IllegalStateException("O grafo não é Euleriano.");
+        }
+
+        // Encontra vértice inicial
+        String start = adjList.keySet().iterator().next();
+        if (type.equals("Eulerian Path")) {
+            for (String vertex : adjList.keySet()) {
+                if (adjList.get(vertex).size() % 2 != 0) {
+                    start = vertex;
+                    break;
+                }
+            }
+        }
+
+        return findEulerPathOrCircuit(start);
+    }
+
+    private List<String> findEulerPathOrCircuit(String start) {
+        Stack<String> stack = new Stack<>();
+        List<String> path = new ArrayList<>();
+
+        HashMap<String, ArrayList<String>> tempGraph = new HashMap<>();
+        for (Map.Entry<String, ArrayList<String>> entry : adjList.entrySet()) {
+            tempGraph.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+
+        stack.push(start);
+
+        while (!stack.isEmpty()) {
+            String current = stack.peek();
+
+            if (!tempGraph.get(current).isEmpty()) {
+                String next = tempGraph.get(current).get(0);
+
+                tempGraph.get(current).remove(next);
+                tempGraph.get(next).remove(current);
+
+                stack.push(next);
+            } else {
+                path.add(stack.pop());
+            }
+        }
+
+        Collections.reverse(path);
+        return path;
+    }
+
     @Override
     public String toString() {
         return "Graph{" +
@@ -90,34 +157,15 @@ public class Graph {
 
         myGraph.addEdge("A", "B");
         myGraph.addEdge("A", "C");
-        myGraph.addEdge("A", "D");
-        myGraph.addEdge("B", "D");
+        myGraph.addEdge("B", "C");
         myGraph.addEdge("C", "D");
 
-        System.out.println(myGraph.toString());
 
-        System.out.println("##################################");
-
-        System.out.println(myGraph.getVertexDegree("A"));
-
-        System.out.println("##################################");
-        System.out.println(myGraph.getAllVertexDegree());
-        System.out.println("##################################");
-        System.out.println(myGraph.adjacency("A"));
-        System.out.println("##################################");
-
-
-        myGraph.removeVertex("D");
-
-        System.out.println(myGraph.toString());
-
-        System.out.println("##################################");
-
-        System.out.println(myGraph.getVertexDegree("A"));
-
-        System.out.println("##################################");
-        System.out.println(myGraph.getAllVertexDegree());
-        System.out.println("##################################");
+        try {
+            System.out.println("Caminho/Circuito de Euler: " + myGraph.fleuryAlgorithm());
+        } catch (IllegalStateException e) {
+            System.out.println(e.getMessage());
+        }
 
     }
 }
