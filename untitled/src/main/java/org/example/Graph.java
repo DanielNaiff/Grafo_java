@@ -2,48 +2,69 @@ package org.example;
 
 import java.util.*;
 
-
 public class Graph {
     private HashMap<String, ArrayList<String>> adjList = new HashMap<>();
+    private HashMap<String, Integer> vertexWeights = new HashMap<>(); // Mapa para armazenar pesos dos vértices
 
-    public boolean addVertex(String vertex){
-        if(adjList.get(vertex) == null){
+    public boolean addVertex(String vertex) {
+        return addVertex(vertex, 0); // Peso padrão 0
+    }
+
+    public boolean addVertex(String vertex, int weight) {
+        if(adjList.get(vertex) == null) {
             adjList.put(vertex, new ArrayList<String>());
-
+            vertexWeights.put(vertex, weight);
             return true;
         }
-
         return false;
     }
 
-    public boolean addEdge(String vertex1, String vertex2){
-        if(adjList.get(vertex1) != null && adjList.get(vertex2) != null){
+    public boolean addEdge(String vertex1, String vertex2) {
+        if(adjList.get(vertex1) != null && adjList.get(vertex2) != null) {
             adjList.get(vertex1).add(vertex2);
             adjList.get(vertex2).add(vertex1);
-
             return true;
         }
         return false;
     }
 
-    public boolean removeEdge(String vertex1, String vertex2){
-        if(adjList.get(vertex1) != null && adjList.get(vertex2) != null){
+    public boolean removeEdge(String vertex1, String vertex2) {
+        if(adjList.get(vertex1) != null && adjList.get(vertex2) != null) {
             adjList.get(vertex1).remove(vertex2);
             adjList.get(vertex2).remove(vertex1);
-
             return true;
         }
-
         return false;
     }
 
-    public boolean removeVertex(String vertex){
+    public boolean removeVertex(String vertex) {
         if (adjList.get(vertex) == null) return false;
-        for(String otherVertex : adjList.get(vertex)){
+        for(String otherVertex : adjList.get(vertex)) {
             adjList.get(otherVertex).remove(vertex);
         }
         adjList.remove(vertex);
+        vertexWeights.remove(vertex);
         return true;
+    }
+
+    // Métodos para manipulação de pesos dos vértices
+    public boolean setVertexWeight(String vertex, int weight) {
+        if (!adjList.containsKey(vertex)) {
+            return false;
+        }
+        vertexWeights.put(vertex, weight);
+        return true;
+    }
+
+    public int getVertexWeight(String vertex) {
+        if (!vertexWeights.containsKey(vertex)) {
+            throw new IllegalArgumentException("O vértice \"" + vertex + "\" não existe no grafo.");
+        }
+        return vertexWeights.get(vertex);
+    }
+
+    public HashMap<String, Integer> getAllVertexWeights() {
+        return new HashMap<>(vertexWeights);
     }
 
     public List<String> adjacency(String vertex) {
@@ -53,19 +74,18 @@ public class Graph {
         return new ArrayList<>(adjList.get(vertex));
     }
 
-    public int getVertexDegree(String vertex){
+    public int getVertexDegree(String vertex) {
         if (!adjList.containsKey(vertex)) {
-            throw new IllegalArgumentException("O Vertice \"" + vertex + "\" nao existe no grafo.");
+            throw new IllegalArgumentException("O Vértice \"" + vertex + "\" não existe no grafo.");
         }
         return adjList.get(vertex).size();
     }
 
-    public HashMap<String, Integer> getAllVertexDegree(){
+    public HashMap<String, Integer> getAllVertexDegree() {
         HashMap<String, Integer> degreeMap = new HashMap<>();
-        for(String vertex : adjList.keySet()){
+        for(String vertex : adjList.keySet()) {
             degreeMap.put(vertex, getVertexDegree(vertex));
         }
-
         return degreeMap;
     }
 
@@ -93,7 +113,6 @@ public class Graph {
         }
         return count;
     }
-
 
     public String isEulerian() {
         HashMap<String, Integer> degrees = getAllVertexDegree();
@@ -169,39 +188,138 @@ public class Graph {
         return path;
     }
 
-    @Override
-    public String toString() {
-        return "Graph{" +
+    public int getPathWeight(List<String> path) {
+        if (path == null || path.isEmpty()) {
+            return 0;
+        }
 
-                "adjList=" + adjList +
-
-                '}';
+        int totalWeight = 0;
+        for (String vertex : path) {
+            totalWeight += getVertexWeight(vertex);
+        }
+        return totalWeight;
     }
 
-    public static void main(String[] args) {
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Graph{\n");
+        for (String vertex : adjList.keySet()) {
+            sb.append("  ").append(vertex).append(" (peso: ").append(vertexWeights.get(vertex))
+                    .append(") -> ").append(adjList.get(vertex)).append("\n");
+        }
+        sb.append("}");
+        return sb.toString();
+    }
 
+    public List<String> bellmoreTSP(String startVertex) {
+        if (!adjList.containsKey(startVertex)) {
+            throw new IllegalArgumentException("Vértice inicial não existe no grafo.");
+        }
+
+        if (!isCompleteGraph()) {
+            throw new IllegalStateException("O grafo precisa ser completo para o TSP tradicional.");
+        }
+
+        List<String> vertices = new ArrayList<>(adjList.keySet());
+        int n = vertices.size();
+
+        List<String> unvisited = new ArrayList<>(vertices);
+        unvisited.remove(startVertex);
+
+        List<String> currentPath = new ArrayList<>();
+        currentPath.add(startVertex);
+
+        int[] bestCost = {Integer.MAX_VALUE};
+        List<String> bestPath = new ArrayList<>();
+
+        bellmoreTSPRecursive(startVertex, unvisited, currentPath, 0, bestCost, bestPath);
+
+        if (bestPath.isEmpty()) {
+            throw new IllegalStateException("Não foi possível encontrar um ciclo hamiltoniano.");
+        }
+
+        bestPath.add(startVertex);
+        return bestPath;
+    }
+
+    private void bellmoreTSPRecursive(String startVertex, List<String> unvisited,
+                                      List<String> currentPath, int currentCost,
+                                      int[] bestCost, List<String> bestPath) {
+        if (unvisited.isEmpty()) {
+            int finalCost = currentCost + getEdgeWeight(currentPath.get(currentPath.size()-1), startVertex);
+
+            if (finalCost < bestCost[0]) {
+                bestCost[0] = finalCost;
+                bestPath.clear();
+                bestPath.addAll(currentPath);
+            }
+            return;
+        }
+
+        if (currentCost >= bestCost[0]) {
+            return;
+        }
+
+        unvisited.sort(Comparator.comparingInt(this::getVertexWeight));
+
+        for (int i = 0; i < unvisited.size(); i++) {
+            String nextVertex = unvisited.get(i);
+
+            int edgeCost = getEdgeWeight(currentPath.get(currentPath.size()-1), nextVertex);
+
+            currentPath.add(nextVertex);
+            unvisited.remove(i);
+
+            bellmoreTSPRecursive(startVertex, unvisited, currentPath,
+                    currentCost + edgeCost + getVertexWeight(nextVertex),
+                    bestCost, bestPath);
+
+            currentPath.remove(currentPath.size()-1);
+            unvisited.add(i, nextVertex);
+        }
+    }
+
+    private boolean isCompleteGraph() {
+        int n = adjList.size();
+        for (String vertex : adjList.keySet()) {
+            if (adjList.get(vertex).size() != n - 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private int getEdgeWeight(String vertex1, String vertex2) {
+        return getVertexWeight(vertex1) + getVertexWeight(vertex2);
+    }
+
+
+    public static void main(String[] args) {
         Graph myGraph = new Graph();
 
-        myGraph.addVertex("A");
-        myGraph.addVertex("B");
-        myGraph.addVertex("C");
-        myGraph.addVertex("D");
-        myGraph.addVertex("E");
+        myGraph.addVertex("A", 1);
+        myGraph.addVertex("B", 2);
+        myGraph.addVertex("C", 3);
+        myGraph.addVertex("D", 4);
 
         myGraph.addEdge("A", "B");
         myGraph.addEdge("A", "C");
+        myGraph.addEdge("A", "D");
         myGraph.addEdge("B", "C");
-        myGraph.addEdge("B", "D"); // Ponte
-        myGraph.addEdge("D", "E");
+        myGraph.addEdge("B", "D");
+        myGraph.addEdge("C", "D");
 
-        System.out.println("Tipo de grafo: " + myGraph.isEulerian());
+        System.out.println("Grafo completo para TSP:");
+        System.out.println(myGraph);
 
         try {
-            System.out.println("Caminho/Circuito de Euler: " + myGraph.fleuryAlgorithm());
+            List<String> tspPath = myGraph.bellmoreTSP("A");
+            System.out.println("\nMelhor caminho TSP: " + tspPath);
+            System.out.println("Custo total: " +
+                    (myGraph.getPathWeight(tspPath) - myGraph.getVertexWeight("A"))); // Subtrai o peso duplicado do vértice inicial
         } catch (IllegalStateException e) {
             System.out.println(e.getMessage());
         }
-
-
     }
 }
